@@ -6,10 +6,10 @@
 
 int	main(int ac, char **av)
 {
-    gid_t	egid;
-    uid_t	euid;
-    int		nbr;
-    char	**cmd;
+	gid_t	egid;
+	uid_t	euid;
+	int		nbr;
+	char	**cmd;
 
 	nbr = atoi(av[1]);
 	if (nbr == 423)
