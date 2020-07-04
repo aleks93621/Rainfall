@@ -4,18 +4,18 @@
 #include <string.h>
 #include <stdlib.h>
 
-int	main(int ac, char **av)
+int main(int ac, char **av)
 {
 	gid_t	egid;
 	uid_t	euid;
 	int		nbr;
-	char	**cmd;
+	char	*cmd[2];
 
 	nbr = atoi(av[1]);
 	if (nbr == 423)
 	{
 		cmd[0] = strdup("/bin/sh");
-		cmd[1] = 0;
+        cmd[1] = 0;
 		egid = getegid();
 		euid = geteuid();
 		setresgid(egid, egid, egid);
