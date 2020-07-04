@@ -15,7 +15,7 @@ int main(int ac, char **av)
 	if (nbr == 423)
 	{
 		cmd[0] = strdup("/bin/sh");
-        cmd[1] = 0;
+		cmd[1] = 0;
 		egid = getegid();
 		euid = geteuid();
 		setresgid(egid, egid, egid);
