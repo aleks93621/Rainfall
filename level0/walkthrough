@@ -1,0 +1,20 @@
+LEVEL 0
+-------
+
+1.	gdb level0
+
+2.	disas main
+
+3.	On voit qu'un cmp est effectué. (Ligne +25)
+	0x1a7 en hex donne --> 423 en décimal.
+
+4.	./level 423
+
+5.	pwd
+	/home/user/level0
+
+6.	cd ../level1 && cat .pass
+	1fe8a524fa4bec01ca4ea2a869af2a02260d4a7d5fe7e7c24d8617e6dca12d3a
+
+7.	su level1
+	Pass: 1fe8a524fa4bec01ca4ea2a869af2a02260d4a7d5fe7e7c24d8617e6dca12d3a
