@@ -8,8 +8,8 @@ int		run(void)
 
 int		main()
 {
-    char str[76];
+	char str[68];
 
 	gets(str);
-    return 0;
+	return 0;
 }

