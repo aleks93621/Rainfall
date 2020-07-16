@@ -5,8 +5,8 @@
 
 void	p(void)
 {
-	char			str[76];	// Définition du buffer
-	int				*eip;		// Valeur de retour du gets qui va nous permettre d'effectuer le check
+	char	str[76];	// Définition du buffer
+	int		*eip;		// Valeur de retour du gets qui va nous permettre d'effectuer le check
 
 	fflush(stdout);		// Force l'écriture de toutes les données se trouvant dans stdout
 	gets(str);			// Saisie de caractères et de chaînes
