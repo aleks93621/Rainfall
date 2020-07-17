@@ -4,7 +4,7 @@ LEVEL 2
 1.	gdb level2
 
 2.	disas main
-	On voit que la fonction main appelle une fonction annexe, la fonction p
+	On voit que la fonction main appelle une fonction annexe, la fonction p()
 	0x08048545 <+6>:	call   0x80484d4 <p>
 
 3.	disas p

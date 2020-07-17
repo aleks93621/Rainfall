@@ -2,7 +2,7 @@
 
 int		run(void)
 {
-	fwrite("Good... Wait what?\n", 19, 1, stdout);	// Si la fonction est bien appelée grâce au buffer overflow un message est affiché
+	fwrite("Good... Wait what?\n", 1, 19, stdout);	// Si la fonction est bien appelée grâce au buffer overflow un message est affiché
 	system("/bin/sh");	// Un shell est lancé
 }
 
