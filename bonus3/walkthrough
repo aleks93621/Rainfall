@@ -1,0 +1,38 @@
+BONUS 3
+-------
+
+1.	gdb bonus3
+
+2.	disas main
+
+Alors nous avons un fopen() qui va ouvrir le
+fichier: "/home/user/end/.pass". (0x08048507 <+19>:	mov    eax,0x80486f2)
+
+Ensuite on fait un fread() qui va inscrire le contenu
+du fichier ouvert précédemment dans un buf.
+
+Un atoi() est passé sur le av[1].
+	0x08048579 <+133>:	mov    eax,DWORD PTR [ebp+0xc]
+	0x0804857c <+136>:	add    eax,0x4
+	0x0804857f <+139>:	mov    eax,DWORD PTR [eax]
+	0x08048581 <+141>:	mov    DWORD PTR [esp],eax
+	0x08048584 <+144>:	call   0x8048430 <atoi@plt>
+
+Juste après ça, buf[atoi(av[1])] = 0 est effectué.
+	0x08048589 <+149>:	mov    BYTE PTR [esp+eax*1+0x18],0x0
+
+Donc si on passe "" à l'av[1], la variable sera buf[0] = 0x0
+vu que quand on passe "" à atoi(), la fonction renvoie 0.
+
+On effectue cette opération car par la suite on a un strcmp() qui va comparer
+le buf et l'av[1], c'est le seul moyen d'accéder à execl si les 2
+strings sont identiques.
+
+./bonus3 ""
+$ whoami
+end
+$ cat /home/user/end/.pass
+3321b6f81659f9a71c76616f606e4b50189cecfea611393d5d649f75e157353c
+
+3.	su end
+	3321b6f81659f9a71c76616f606e4b50189cecfea611393d5d649f75e157353c
