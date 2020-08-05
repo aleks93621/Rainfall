@@ -95,7 +95,7 @@ LEVEL 2
 		80484cf:	ff d0                	call   *%eax
 		80485eb:	ff d0                	call   *%eax
 
-	Donc on peut utiliser les 3 adresses suivantes pour compléter notre payload.
+	Donc on peut utiliser les 3 adresses suivantes pour compléter notre offset.
 		-	0x0804a008
 		-	0x080484cf
 		-	0x080485eb

